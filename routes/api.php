@@ -19,6 +19,9 @@ Route::group([
 Route::get('products', [App\Http\Controllers\ProductController::class, 'index']);
 Route::get('products/{slug}', [App\Http\Controllers\ProductController::class, 'show']);
 Route::get('categories', [App\Http\Controllers\CategoryController::class, 'index']);
+Route::get('colors', function () {
+    return response()->json(App\Models\Color::where('is_active', true)->get());
+});
 
 Route::middleware('auth:api')->group(function () {
     // User routes

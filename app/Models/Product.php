@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
@@ -30,6 +31,13 @@ class Product extends Model
     public function subcategory(): BelongsTo
     {
         return $this->belongsTo(Subcategory::class);
+    }
+
+    public function colors(): BelongsToMany
+    {
+        return $this->belongsToMany(Color::class, 'product_color')
+            ->withPivot('stock')
+            ->withTimestamps();
     }
 
     public function images(): HasMany

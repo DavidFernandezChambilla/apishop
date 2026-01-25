@@ -11,7 +11,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'subcategory', 'images', 'variants'])
+        $query = Product::with(['category', 'subcategory', 'images', 'variants', 'colors'])
             ->where('is_active', true);
 
         if ($request->has('category_id')) {
@@ -27,7 +27,7 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with(['category', 'subcategory', 'images', 'variants'])
+        $product = Product::with(['category', 'subcategory', 'images', 'variants', 'colors'])
             ->where('slug', $slug)
             ->where('is_active', true)
             ->firstOrFail();
@@ -47,7 +47,10 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'colors' => 'nullable|array',
+            'colors.*.color_id' => 'required|exists:colors,id',
+            'colors.*.stock' => 'required|integer|min:0'
         ]);
 
         $product = Product::create([
@@ -71,12 +74,21 @@ class ProductController extends Controller
                 ProductImage::create([
                     'product_id' => $product->id,
                     'url' => $url,
-                    'is_primary' => $index === 0 // Primera imagen es la principal
+                    'is_primary' => $index === 0
                 ]);
             }
         }
 
-        return response()->json($product->load(['category', 'subcategory', 'images']), 201);
+        // Asignar colores con sus stocks
+        if ($request->has('colors')) {
+            foreach ($request->colors as $colorData) {
+                $product->colors()->attach($colorData['color_id'], [
+                    'stock' => $colorData['stock']
+                ]);
+            }
+        }
+
+        return response()->json($product->load(['category', 'subcategory', 'images', 'colors']), 201);
     }
 
     /**
@@ -95,7 +107,10 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'nullable',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'existing_images.*' => 'nullable|string'
+            'existing_images.*' => 'nullable|string',
+            'colors' => 'nullable|array',
+            'colors.*.color_id' => 'required|exists:colors,id',
+            'colors.*.stock' => 'required|integer|min:0'
         ]);
 
         // Clean values from string to primary types if needed
@@ -103,7 +118,7 @@ class ProductController extends Controller
             $validated['is_active'] = filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN);
         }
 
-        $product->update(collect($validated)->except(['images', 'existing_images'])->toArray());
+        $product->update(collect($validated)->except(['images', 'existing_images', 'colors'])->toArray());
 
         // Eliminar todas las imágenes actuales
         $product->images()->delete();
@@ -139,7 +154,16 @@ class ProductController extends Controller
             }
         }
 
-        return response()->json($product->load(['category', 'subcategory', 'images']));
+        // Sincronizar colores
+        if ($request->has('colors')) {
+            $colorData = [];
+            foreach ($request->colors as $color) {
+                $colorData[$color['color_id']] = ['stock' => $color['stock']];
+            }
+            $product->colors()->sync($colorData);
+        }
+
+        return response()->json($product->load(['category', 'subcategory', 'images', 'colors']));
     }
 
     /**
