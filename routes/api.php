@@ -18,9 +18,7 @@ Route::group([
 // Ecommerce Routes
 Route::get('products', [App\Http\Controllers\ProductController::class, 'index']);
 Route::get('products/{slug}', [App\Http\Controllers\ProductController::class, 'show']);
-Route::get('categories', function () {
-    return response()->json(App\Models\Category::where('is_active', true)->get());
-});
+Route::get('categories', [App\Http\Controllers\CategoryController::class, 'index']);
 
 Route::middleware('auth:api')->group(function () {
     // User routes

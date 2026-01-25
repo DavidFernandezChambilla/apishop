@@ -15,7 +15,13 @@ class ProductController extends Controller
             ->where('is_active', true);
 
         if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $categoryId = $request->category_id;
+            $query->where(function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId)
+                    ->orWhereHas('category', function ($subQ) use ($categoryId) {
+                        $subQ->where('parent_id', $categoryId);
+                    });
+            });
         }
 
         return response()->json($query->latest()->get());
