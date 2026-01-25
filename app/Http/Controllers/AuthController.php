@@ -80,7 +80,11 @@ class AuthController extends Controller implements HasMiddleware
      */
     public function me()
     {
-        return response()->json(Auth::guard('api')->user());
+        $user = Auth::guard('api')->user();
+        if ($user) {
+            $user->load('roles');
+        }
+        return response()->json($user);
     }
 
     /**
@@ -119,11 +123,16 @@ class AuthController extends Controller implements HasMiddleware
         /** @var \Tymon\JWTAuth\JWTGuard $guard */
         $guard = Auth::guard('api');
 
+        $user = $guard->user();
+        if ($user) {
+            $user->load('roles');
+        }
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => $guard->factory()->getTTL() * 60,
-            'user' => $guard->user()
+            'user' => $user
         ]);
     }
 }

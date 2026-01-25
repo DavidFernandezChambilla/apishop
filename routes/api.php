@@ -25,4 +25,14 @@ Route::get('categories', function () {
 Route::middleware('auth:api')->group(function () {
     // User routes
     Route::get('profile', [AuthController::class, 'me']);
+    Route::get('orders', [App\Http\Controllers\OrderController::class, 'index']);
+    Route::post('orders', [App\Http\Controllers\OrderController::class, 'store']);
+    Route::get('orders/{id}', [App\Http\Controllers\OrderController::class, 'show']);
+
+    // Admin Routes
+    Route::middleware('admin')->group(function () {
+        Route::post('products', [App\Http\Controllers\ProductController::class, 'store']);
+        Route::put('products/{id}', [App\Http\Controllers\ProductController::class, 'update']);
+        Route::delete('products/{id}', [App\Http\Controllers\ProductController::class, 'destroy']);
+    });
 });
