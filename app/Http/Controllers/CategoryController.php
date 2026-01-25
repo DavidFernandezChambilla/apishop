@@ -10,8 +10,7 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::parentsOnly()
-            ->with('children')
+        $categories = Category::with('subcategories')
             ->where('is_active', true)
             ->get();
 

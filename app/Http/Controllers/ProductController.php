@@ -11,17 +11,15 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'images', 'variants'])
+        $query = Product::with(['category', 'subcategory', 'images', 'variants'])
             ->where('is_active', true);
 
         if ($request->has('category_id')) {
-            $categoryId = $request->category_id;
-            $query->where(function ($q) use ($categoryId) {
-                $q->where('category_id', $categoryId)
-                    ->orWhereHas('category', function ($subQ) use ($categoryId) {
-                        $subQ->where('parent_id', $categoryId);
-                    });
-            });
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->has('subcategory_id')) {
+            $query->where('subcategory_id', $request->subcategory_id);
         }
 
         return response()->json($query->latest()->get());
@@ -29,7 +27,7 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with(['category', 'images', 'variants'])
+        $product = Product::with(['category', 'subcategory', 'images', 'variants'])
             ->where('slug', $slug)
             ->where('is_active', true)
             ->firstOrFail();
@@ -45,34 +43,40 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'subcategory_id' => 'nullable|exists:subcategories,id',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
         ]);
 
         $product = Product::create([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']) . '-' . uniqid(),
             'category_id' => $validated['category_id'],
+            'subcategory_id' => $validated['subcategory_id'] ?? null,
             'price' => $validated['price'],
             'stock' => $validated['stock'],
             'description' => $validated['description'] ?? null,
             'is_active' => true
         ]);
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $url = asset('storage/' . $path);
+        // Procesar múltiples imágenes
+        if ($request->hasFile('images')) {
+            $images = $request->file('images');
+            foreach ($images as $index => $image) {
+                $path = $image->store('products', 'public');
+                $url = asset('storage/' . $path);
 
-            ProductImage::create([
-                'product_id' => $product->id,
-                'url' => $url,
-                'is_primary' => true
-            ]);
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'url' => $url,
+                    'is_primary' => $index === 0 // Primera imagen es la principal
+                ]);
+            }
         }
 
-        return response()->json($product->load(['category', 'images']), 201);
+        return response()->json($product->load(['category', 'subcategory', 'images']), 201);
     }
 
     /**
@@ -85,11 +89,13 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
+            'subcategory_id' => 'nullable|exists:subcategories,id',
             'price' => 'nullable|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
             'description' => 'nullable|string',
-            'is_active' => 'nullable', // Flexible validation for string/bool from FormData
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
+            'is_active' => 'nullable',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'existing_images.*' => 'nullable|string'
         ]);
 
         // Clean values from string to primary types if needed
@@ -97,23 +103,43 @@ class ProductController extends Controller
             $validated['is_active'] = filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN);
         }
 
-        $product->update(collect($validated)->except('image')->toArray());
+        $product->update(collect($validated)->except(['images', 'existing_images'])->toArray());
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $url = asset('storage/' . $path);
+        // Eliminar todas las imágenes actuales
+        $product->images()->delete();
 
-            // Reemplazar todas las imágenes anteriores (simplificado)
-            $product->images()->delete();
+        $imageOrder = 0;
 
-            ProductImage::create([
-                'product_id' => $product->id,
-                'url' => $url,
-                'is_primary' => true
-            ]);
+        // Primero, restaurar las imágenes existentes que no fueron eliminadas
+        if ($request->has('existing_images')) {
+            $existingUrls = $request->input('existing_images');
+            foreach ($existingUrls as $url) {
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'url' => $url,
+                    'is_primary' => $imageOrder === 0
+                ]);
+                $imageOrder++;
+            }
         }
 
-        return response()->json($product->load(['category', 'images']));
+        // Luego, agregar las nuevas imágenes
+        if ($request->hasFile('images')) {
+            $images = $request->file('images');
+            foreach ($images as $image) {
+                $path = $image->store('products', 'public');
+                $url = asset('storage/' . $path);
+
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'url' => $url,
+                    'is_primary' => $imageOrder === 0
+                ]);
+                $imageOrder++;
+            }
+        }
+
+        return response()->json($product->load(['category', 'subcategory', 'images']));
     }
 
     /**

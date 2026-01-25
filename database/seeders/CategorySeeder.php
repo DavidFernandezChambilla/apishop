@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Subcategory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -18,7 +19,7 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($hierarchy as $parentName => $children) {
-            $parent = Category::create([
+            $category = Category::create([
                 'name' => $parentName,
                 'slug' => Str::slug($parentName),
                 'description' => "Colección de $parentName",
@@ -26,8 +27,8 @@ class CategorySeeder extends Seeder
             ]);
 
             foreach ($children as $childName) {
-                Category::create([
-                    'parent_id' => $parent->id,
+                Subcategory::create([
+                    'category_id' => $category->id,
                     'name' => $childName,
                     'slug' => Str::slug($childName),
                     'description' => "$childName dentro de la colección $parentName",
