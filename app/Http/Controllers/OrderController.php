@@ -67,14 +67,23 @@ class OrderController extends Controller
                     ]);
                 }
 
-                // 3. Create Payment (Simulated)
-                Payment::create([
+                // 3. Create Payment
+                $paymentData = [
                     'order_id' => $order->id,
                     'payment_method' => $request->payment_method,
                     'amount' => $request->total_amount,
                     'status' => 'pending',
-                    'transaction_reference' => 'TXN-' . strtoupper(Str::random(12))
-                ]);
+                    'transaction_id' => 'TXN-' . strtoupper(Str::random(12))
+                ];
+
+                if ($request->payment_method === 'yape' && $request->hasFile('proof_image')) {
+                    $path = $request->file('proof_image')->store('payments', 'public');
+                    $paymentData['proof_image'] = asset('storage/' . $path);
+                    $order->status = 'pending_validation';
+                    $order->save();
+                }
+
+                Payment::create($paymentData);
 
                 return response()->json($order->load('items', 'payment'), 201);
             });
@@ -123,7 +132,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled'
+            'status' => 'required|in:pending,pending_validation,processing,shipped,delivered,cancelled,paid,rejected_payment'
         ]);
 
         $order = Order::findOrFail($id);

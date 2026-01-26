@@ -12,7 +12,8 @@ class Payment extends Model
         'payment_method',
         'amount',
         'status',
-        'transaction_reference'
+        'transaction_id',
+        'proof_image'
     ];
 
     public function order(): BelongsTo
