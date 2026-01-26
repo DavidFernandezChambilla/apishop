@@ -19,6 +19,7 @@ Route::group([
 Route::get('products', [App\Http\Controllers\ProductController::class, 'index']);
 Route::get('products/{slug}', [App\Http\Controllers\ProductController::class, 'show']);
 Route::get('categories', [App\Http\Controllers\CategoryController::class, 'index']);
+Route::get('subcategories', [App\Http\Controllers\SubcategoryController::class, 'index']);
 Route::get('colors', function () {
     return response()->json(App\Models\Color::where('is_active', true)->get());
 });
@@ -38,5 +39,17 @@ Route::middleware('auth:api')->group(function () {
         Route::post('products', [App\Http\Controllers\ProductController::class, 'store']);
         Route::put('products/{id}', [App\Http\Controllers\ProductController::class, 'update']);
         Route::delete('products/{id}', [App\Http\Controllers\ProductController::class, 'destroy']);
+
+        // Categories Map
+        Route::post('categories', [App\Http\Controllers\CategoryController::class, 'store']);
+        Route::get('categories/show/{id}', [App\Http\Controllers\CategoryController::class, 'show']);
+        Route::put('categories/{id}', [App\Http\Controllers\CategoryController::class, 'update']);
+        Route::delete('categories/{id}', [App\Http\Controllers\CategoryController::class, 'destroy']);
+
+        // Subcategories Map
+        Route::post('subcategories', [App\Http\Controllers\SubcategoryController::class, 'store']);
+        Route::get('subcategories/show/{id}', [App\Http\Controllers\SubcategoryController::class, 'show']);
+        Route::put('subcategories/{id}', [App\Http\Controllers\SubcategoryController::class, 'update']);
+        Route::delete('subcategories/{id}', [App\Http\Controllers\SubcategoryController::class, 'destroy']);
     });
 });
