@@ -22,6 +22,9 @@ Route::get('categories', [App\Http\Controllers\CategoryController::class, 'index
 Route::get('colors', function () {
     return response()->json(App\Models\Color::where('is_active', true)->get());
 });
+Route::get('sizes', function () {
+    return response()->json(App\Models\Size::where('is_active', true)->get());
+});
 
 Route::middleware('auth:api')->group(function () {
     // User routes

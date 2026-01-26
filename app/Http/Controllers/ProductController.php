@@ -11,7 +11,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'subcategory', 'images', 'variants', 'colors'])
+        $query = Product::with(['category', 'subcategory', 'images', 'variants.color', 'variants.size'])
             ->where('is_active', true);
 
         if ($request->has('category_id')) {
@@ -27,7 +27,7 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with(['category', 'subcategory', 'images', 'variants', 'colors'])
+        $product = Product::with(['category', 'subcategory', 'images', 'variants.color', 'variants.size'])
             ->where('slug', $slug)
             ->where('is_active', true)
             ->firstOrFail();
@@ -48,10 +48,18 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'colors' => 'nullable|array',
-            'colors.*.color_id' => 'required|exists:colors,id',
-            'colors.*.stock' => 'required|integer|min:0'
+            'variants' => 'nullable|array',
+            'variants.*.color_id' => 'required|exists:colors,id',
+            'variants.*.size_id' => 'required|exists:sizes,id',
+            'variants.*.stock' => 'required|integer|min:0'
         ]);
+
+        $totalStock = 0;
+        if ($request->has('variants')) {
+            foreach ($request->variants as $v) {
+                $totalStock += $v['stock'];
+            }
+        }
 
         $product = Product::create([
             'name' => $validated['name'],
@@ -59,7 +67,7 @@ class ProductController extends Controller
             'category_id' => $validated['category_id'],
             'subcategory_id' => $validated['subcategory_id'] ?? null,
             'price' => $validated['price'],
-            'stock' => $validated['stock'],
+            'stock' => $totalStock, // Stock total calculado
             'description' => $validated['description'] ?? null,
             'is_active' => true
         ]);
@@ -79,16 +87,18 @@ class ProductController extends Controller
             }
         }
 
-        // Asignar colores con sus stocks
-        if ($request->has('colors')) {
-            foreach ($request->colors as $colorData) {
-                $product->colors()->attach($colorData['color_id'], [
-                    'stock' => $colorData['stock']
+        // Crear variantes
+        if ($request->has('variants')) {
+            foreach ($request->variants as $variant) {
+                $product->variants()->create([
+                    'color_id' => $variant['color_id'],
+                    'size_id' => $variant['size_id'],
+                    'stock' => $variant['stock']
                 ]);
             }
         }
 
-        return response()->json($product->load(['category', 'subcategory', 'images', 'colors']), 201);
+        return response()->json($product->load(['category', 'subcategory', 'images', 'variants.color', 'variants.size']), 201);
     }
 
     /**
@@ -108,24 +118,35 @@ class ProductController extends Controller
             'is_active' => 'nullable',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'existing_images.*' => 'nullable|string',
-            'colors' => 'nullable|array',
-            'colors.*.color_id' => 'required|exists:colors,id',
-            'colors.*.stock' => 'required|integer|min:0'
+            'variants' => 'nullable|array',
+            'variants.*.color_id' => 'required|exists:colors,id',
+            'variants.*.size_id' => 'required|exists:sizes,id',
+            'variants.*.stock' => 'required|integer|min:0'
         ]);
 
-        // Clean values from string to primary types if needed
+        // Clean values
         if (isset($validated['is_active'])) {
             $validated['is_active'] = filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN);
         }
 
-        $product->update(collect($validated)->except(['images', 'existing_images', 'colors'])->toArray());
+        // Calcular nuevo stock total
+        $totalStock = 0;
+        if ($request->has('variants')) {
+            foreach ($request->variants as $v) {
+                $totalStock += $v['stock'];
+            }
+        }
+        // Actualizar stock total en el producto principal
+        $validated['stock'] = $totalStock;
+
+        $product->update(collect($validated)->except(['images', 'existing_images', 'variants'])->toArray());
 
         // Eliminar todas las imágenes actuales
         $product->images()->delete();
 
         $imageOrder = 0;
 
-        // Primero, restaurar las imágenes existentes que no fueron eliminadas
+        // Validar existing_images
         if ($request->has('existing_images')) {
             $existingUrls = $request->input('existing_images');
             foreach ($existingUrls as $url) {
@@ -138,7 +159,7 @@ class ProductController extends Controller
             }
         }
 
-        // Luego, agregar las nuevas imágenes
+        // Agregar nuevas imágenes
         if ($request->hasFile('images')) {
             $images = $request->file('images');
             foreach ($images as $image) {
@@ -154,16 +175,20 @@ class ProductController extends Controller
             }
         }
 
-        // Sincronizar colores
-        if ($request->has('colors')) {
-            $colorData = [];
-            foreach ($request->colors as $color) {
-                $colorData[$color['color_id']] = ['stock' => $color['stock']];
+        // Sincronizar variantes (reemplazo completo)
+        if ($request->has('variants')) {
+            $product->variants()->delete(); // Eliminar variantes anteriores
+
+            foreach ($request->variants as $variant) {
+                $product->variants()->create([
+                    'color_id' => $variant['color_id'],
+                    'size_id' => $variant['size_id'],
+                    'stock' => $variant['stock']
+                ]);
             }
-            $product->colors()->sync($colorData);
         }
 
-        return response()->json($product->load(['category', 'subcategory', 'images', 'colors']));
+        return response()->json($product->load(['category', 'subcategory', 'images', 'variants.color', 'variants.size']));
     }
 
     /**

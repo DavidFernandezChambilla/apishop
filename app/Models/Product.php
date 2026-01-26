@@ -33,11 +33,9 @@ class Product extends Model
         return $this->belongsTo(Subcategory::class);
     }
 
-    public function colors(): BelongsToMany
+    public function variants(): HasMany
     {
-        return $this->belongsToMany(Color::class, 'product_color')
-            ->withPivot('stock')
-            ->withTimestamps();
+        return $this->hasMany(ProductVariant::class);
     }
 
     public function images(): HasMany
@@ -45,8 +43,4 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
-    public function variants(): HasMany
-    {
-        return $this->hasMany(ProductVariant::class);
-    }
 }

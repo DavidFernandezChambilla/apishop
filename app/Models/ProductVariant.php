@@ -9,13 +9,24 @@ class ProductVariant extends Model
 {
     protected $fillable = [
         'product_id',
-        'size',
-        'color',
-        'stock'
+        'color_id',
+        'size_id',
+        'stock',
+        'price_adjustment'
     ];
 
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(Color::class);
+    }
+
+    public function size(): BelongsTo
+    {
+        return $this->belongsTo(Size::class);
     }
 }
