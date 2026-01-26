@@ -90,9 +90,45 @@ class OrderController extends Controller
     {
         $user = Auth::guard('api')->user();
 
+        // If admin, allow seeing any order, else only own
+        // Note: Ideally middleware handles roles, but here we can check if user is admin or owner
+        // For now, assuming standard user route. We will make a separate adminShow if needed or modify this.
+
         $order = Order::with(['items.product', 'payment'])
             ->where('user_id', $user->id)
             ->findOrFail($id);
+
+        return response()->json($order);
+    }
+
+    // Admin Methods
+
+    public function adminIndex()
+    {
+        $orders = Order::with(['user', 'items', 'payment'])
+            ->latest()
+            ->get();
+
+        return response()->json($orders);
+    }
+
+    public function adminShow($id)
+    {
+        $order = Order::with(['user', 'items.product', 'payment'])
+            ->findOrFail($id);
+
+        return response()->json($order);
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,processing,shipped,delivered,cancelled'
+        ]);
+
+        $order = Order::findOrFail($id);
+        $order->status = $request->status;
+        $order->save();
 
         return response()->json($order);
     }
