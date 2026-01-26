@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +39,7 @@ class OrderController extends Controller
         $request->validate([
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variant_id' => 'nullable|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
             'items.*.product_name' => 'required|string',
@@ -56,15 +59,29 @@ class OrderController extends Controller
                     'notes' => $request->notes
                 ]);
 
-                // 2. Create Order Items
+                // 2. Create Order Items and Discount Stock
                 foreach ($request->items as $item) {
                     OrderItem::create([
                         'order_id' => $order->id,
                         'product_id' => $item['product_id'],
+                        'variant_id' => $item['variant_id'] ?? null,
                         'product_name' => $item['product_name'],
                         'price' => $item['price'],
                         'quantity' => $item['quantity']
                     ]);
+
+                    // Discount Stock
+                    $product = Product::find($item['product_id']);
+                    if ($product) {
+                        $product->decrement('stock', $item['quantity']);
+                    }
+
+                    if (isset($item['variant_id']) && $item['variant_id']) {
+                        $variant = ProductVariant::find($item['variant_id']);
+                        if ($variant) {
+                            $variant->decrement('stock', $item['quantity']);
+                        }
+                    }
                 }
 
                 // 3. Create Payment
@@ -135,8 +152,52 @@ class OrderController extends Controller
             'status' => 'required|in:pending,pending_validation,processing,shipped,delivered,cancelled,paid,rejected_payment'
         ]);
 
-        $order = Order::findOrFail($id);
-        $order->status = $request->status;
+        $order = Order::with('items')->findOrFail($id);
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
+
+        // If status changes TO cancelled (or rejected_payment) FROM something else that was NOT cancelled
+        if (
+            ($newStatus === 'cancelled' || $newStatus === 'rejected_payment') &&
+            ($oldStatus !== 'cancelled' && $oldStatus !== 'rejected_payment')
+        ) {
+
+            // Return stock
+            foreach ($order->items as $item) {
+                $product = Product::find($item->product_id);
+                if ($product) {
+                    $product->increment('stock', $item->quantity);
+                }
+                if ($item->variant_id) {
+                    $variant = ProductVariant::find($item->variant_id);
+                    if ($variant) {
+                        $variant->increment('stock', $item->quantity);
+                    }
+                }
+            }
+        }
+        // If it was cancelled/rejected and now is being restored to a valid state
+        elseif (
+            ($oldStatus === 'cancelled' || $oldStatus === 'rejected_payment') &&
+            ($newStatus !== 'cancelled' && $newStatus !== 'rejected_payment')
+        ) {
+
+            // Discount stock again
+            foreach ($order->items as $item) {
+                $product = Product::find($item->product_id);
+                if ($product) {
+                    $product->decrement('stock', $item->quantity);
+                }
+                if ($item->variant_id) {
+                    $variant = ProductVariant::find($item->variant_id);
+                    if ($variant) {
+                        $variant->decrement('stock', $item->quantity);
+                    }
+                }
+            }
+        }
+
+        $order->status = $newStatus;
         $order->save();
 
         return response()->json($order);
