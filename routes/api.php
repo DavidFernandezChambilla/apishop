@@ -66,5 +66,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('admin/orders', [App\Http\Controllers\OrderController::class, 'adminIndex']);
         Route::get('admin/orders/{id}', [App\Http\Controllers\OrderController::class, 'adminShow']);
         Route::put('admin/orders/{id}/status', [App\Http\Controllers\OrderController::class, 'updateStatus']);
+        // Settings Map
+        Route::get('settings', [App\Http\Controllers\SettingController::class, 'index'])->withoutMiddleware(['auth:api', 'admin']);
+        Route::post('settings', [App\Http\Controllers\SettingController::class, 'update']);
     });
 });
