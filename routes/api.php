@@ -69,5 +69,12 @@ Route::middleware('auth:api')->group(function () {
         // Settings Map
         Route::get('settings', [App\Http\Controllers\SettingController::class, 'index'])->withoutMiddleware(['auth:api', 'admin']);
         Route::post('settings', [App\Http\Controllers\SettingController::class, 'update']);
+
+        // Users Map
+        Route::get('users', [App\Http\Controllers\UserController::class, 'index']);
+        Route::post('users', [App\Http\Controllers\UserController::class, 'store']);
+        Route::get('users/{id}', [App\Http\Controllers\UserController::class, 'show']);
+        Route::put('users/{id}', [App\Http\Controllers\UserController::class, 'update']);
+        Route::delete('users/{id}', [App\Http\Controllers\UserController::class, 'destroy']);
     });
 });
