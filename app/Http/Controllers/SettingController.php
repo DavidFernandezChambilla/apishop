@@ -21,12 +21,17 @@ class SettingController extends Controller
             if ($request->hasFile($key)) {
                 // If it's a file (like the QR), store it
                 $path = $request->file($key)->store('settings', 'public');
-                $value = asset('storage/' . $path);
+                $value = $path; // Guardamos solo el path relativo
 
                 // Delete old image if exists
                 $oldSetting = Setting::where('key', $key)->first();
                 if ($oldSetting && $oldSetting->value) {
-                    $oldPath = str_replace(asset('storage/'), '', $oldSetting->value);
+                    // Limpiamos el path por si era una URL absoluta antigua
+                    $oldPath = $oldSetting->value;
+                    if (str_contains($oldPath, '/storage/')) {
+                        $parts = explode('/storage/', $oldPath);
+                        $oldPath = end($parts);
+                    }
                     Storage::disk('public')->delete($oldPath);
                 }
             }

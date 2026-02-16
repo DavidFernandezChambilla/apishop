@@ -77,11 +77,10 @@ class ProductController extends Controller
             $images = $request->file('images');
             foreach ($images as $index => $image) {
                 $path = $image->store('products', 'public');
-                $url = asset('storage/' . $path);
-
+                // Guardamos solo el path relativo, no la URL completa
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'url' => $url,
+                    'url' => $path,
                     'is_primary' => $index === 0
                 ]);
             }
@@ -164,11 +163,10 @@ class ProductController extends Controller
             $images = $request->file('images');
             foreach ($images as $image) {
                 $path = $image->store('products', 'public');
-                $url = asset('storage/' . $path);
-
+                // Guardamos solo el path relativo
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'url' => $url,
+                    'url' => $path,
                     'is_primary' => $imageOrder === 0
                 ]);
                 $imageOrder++;

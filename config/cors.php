@@ -19,7 +19,11 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://portal.sjj.com.pe'],
+    'allowed_origins' => [
+        'https://portal.sjj.com.pe',
+        'http://localhost:4200',
+        'http://localhost:8000',
+    ],
 
     'allowed_origins_patterns' => [],
 
