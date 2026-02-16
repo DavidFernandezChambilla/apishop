@@ -31,17 +31,24 @@ class Setting extends Model
         }
 
         if ($isImageKey) {
-            // Limpieza de legacy localhost
-            if (str_contains($value, 'localhost:8000/storage/')) {
-                $parts = explode('/storage/', $value);
-                $path = end($parts);
-                return asset('storage/' . $path);
+            // Limpieza de legacy localhost o rutas absolutas mal construidas
+            if (str_contains($value, 'http')) {
+                if (str_contains($value, '/storage/')) {
+                    $parts = explode('/storage/', $value);
+                    $value = end($parts);
+                } else {
+                    return $value;
+                }
             }
 
-            // Si es relativo, devolver URL completa
-            if (!str_starts_with($value, 'http')) {
-                return asset('storage/' . $value);
+            // Construcción manual de la URL para máxima compatibilidad con CPanel
+            $baseUrl = rtrim(config('app.url'), '/');
+            $url = $baseUrl . '/storage/' . ltrim($value, '/');
+
+            if (!str_contains($url, 'localhost') && !str_contains($url, '127.0.0.1')) {
+                $url = str_replace('http://', 'https://', $url);
             }
+            return $url;
         }
 
         return $value;

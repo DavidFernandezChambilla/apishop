@@ -10,7 +10,10 @@ class SettingController extends Controller
 {
     public function index()
     {
-        return response()->json(Setting::all()->pluck('value', 'key'));
+        $settings = Setting::all()->mapWithKeys(function ($setting) {
+            return [$setting->key => $setting->value];
+        });
+        return response()->json($settings);
     }
 
     public function update(Request $request)

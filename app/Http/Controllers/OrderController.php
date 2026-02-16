@@ -95,7 +95,7 @@ class OrderController extends Controller
 
                 if ($request->payment_method === 'yape' && $request->hasFile('proof_image')) {
                     $path = $request->file('proof_image')->store('payments', 'public');
-                    $paymentData['proof_image'] = asset('storage/' . $path);
+                    $paymentData['proof_image'] = $path; // Guardamos solo el path relativo
                     $order->status = 'pending_validation';
                     $order->save();
                 }

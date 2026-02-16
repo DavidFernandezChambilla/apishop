@@ -5,6 +5,13 @@
 
     RewriteEngine On
 
+    # Permitir CORS para imágenes
+    <IfModule mod_headers.c>
+        <FilesMatch "\.(jpg|jpeg|png|gif|webp|ico|svg)$">
+            Header set Access-Control-Allow-Origin "*"
+        </FilesMatch>
+    </IfModule>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
