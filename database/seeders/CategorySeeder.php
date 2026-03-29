@@ -12,10 +12,10 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $hierarchy = [
-            'Accesorios' => ['Pareos', 'Toallas'],
-            'Bikini' => ['Tops', 'Bottoms'],
-            'Ropa' => ['Vestidos', 'Shorts', 'Salidas', 'Otros'],
-            'Ropa De Baño' => ['Enterizos', 'Triquinis']
+            'Abrigos' => ['Largo Moderno', 'Corto Casual', 'Edición Limitada'],
+            'Polos' => ['100% Baby Alpaca', 'Mezcla Premium', 'Cuello Alto'],
+            'Accesorios' => ['Bufandas', 'Gorros', 'Chales', 'Guantes'],
+            'Colección Luxury' => ['Hand-Spun Gold', 'Heritage Series']
         ];
 
         foreach ($hierarchy as $parentName => $children) {

@@ -50,9 +50,15 @@ class ProductImage extends Model
             $value = substr($value, 8);
         }
 
-        // Construcción manual de la URL para máxima compatibilidad con CPanel
-        // y evitar advertencias del IDE (red underlines)
-        $baseUrl = rtrim(config('app.url'), '/');
+        // URL base para storage: usa ASSET_URL si está definido, si no usa APP_URL
+        // Esto es necesario porque APP_URL puede terminar en /api
+        // pero el storage se sirve desde la raíz del public de Laravel
+        $baseUrl = rtrim(config('app.asset_url') ?: config('app.url'), '/');
+
+        // Si APP_URL termina en /api, lo removemos para la URL de storage
+        // porque el storage symlink está en public_html/api/storage/
+        // y la URL correcta es https://qaytuperu.com/api/storage/...
+        // (no https://qaytuperu.com/api/api/storage/...)
         $url = $baseUrl . '/storage/' . ltrim($value, '/');
 
         // Si no estamos en localhost, forzamos HTTPS para evitar bloqueos de contenido mixto

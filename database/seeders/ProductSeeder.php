@@ -15,113 +15,101 @@ class ProductSeeder extends Seeder
     {
         Product::query()->delete();
 
-        // --- ACCESORIOS ---
-        $accesorios = Category::where('name', 'Accesorios')->first();
-        $pareos = Subcategory::where('name', 'Pareos')->first();
-        $toallas = Subcategory::where('name', 'Toallas')->first();
+        // --- ABRIGOS ---
+        $abrigos = Category::where('name', 'Abrigos')->first();
+        $largo = Subcategory::where('name', 'Largo Moderno')->first();
+        $limitada = Subcategory::where('name', 'Edición Limitada')->first();
 
         $p1 = Product::create([
-            'category_id' => $accesorios->id,
-            'subcategory_id' => $pareos->id,
-            'name' => 'Pareo Boho Multi-uso',
-            'slug' => Str::slug('Pareo Boho Multi-uso'),
-            'description' => 'Pareo versátil con diseño bohemio.',
-            'price' => 45.00,
-            'stock' => 50,
+            'category_id' => $abrigos->id,
+            'subcategory_id' => $largo->id,
+            'name' => 'Mantón Heritage Oversize',
+            'slug' => Str::slug('Manton Heritage Oversize'),
+            'description' => 'Abrigo largo de 100% fibra de alpaca, tejido a mano por maestros artesanos de Arequipa. Una pieza eterna.',
+            'price' => 450.00,
+            'stock' => 10,
         ]);
-        $this->addImage($p1->id, 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?q=80&w=800');
+        $this->addImage($p1->id, 'https://images.unsplash.com/photo-1544022613-e87dd75a784a?q=80&w=800');
 
         $p2 = Product::create([
-            'category_id' => $accesorios->id,
-            'subcategory_id' => $toallas->id,
-            'name' => 'Toalla de Microfibra Tropical',
-            'slug' => Str::slug('Toalla de Microfibra Tropical'),
-            'description' => 'Toalla de secado rápido con estampado tropical.',
-            'price' => 89.90,
-            'stock' => 30,
+            'category_id' => $abrigos->id,
+            'subcategory_id' => $limitada->id,
+            'name' => 'Abrigo Imperial Black-Gold',
+            'slug' => Str::slug('Abrigo Imperial Black Gold'),
+            'description' => 'Edición limitada de alpaca negra natural, sin tintes. Máxima suavidad y calidez para el invierno alemán.',
+            'price' => 680.00,
+            'stock' => 5,
         ]);
-        $this->addImage($p2->id, 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=800');
+        $this->addImage($p2->id, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=800');
 
-        // --- BIKINIS ---
-        $bikini = Category::where('name', 'Bikini')->first();
-        $tops = Subcategory::where('name', 'Tops')->first();
-        $bottoms = Subcategory::where('name', 'Bottoms')->first();
+        // --- POLOS & SWEATERS ---
+        $polos = Category::where('name', 'Polos')->first();
+        $babyAlpaca = Subcategory::where('name', '100% Baby Alpaca')->first();
+        $cuelloAlto = Subcategory::where('name', 'Cuello Alto')->first();
 
         $p3 = Product::create([
-            'category_id' => $bikini->id,
-            'subcategory_id' => $tops->id,
-            'name' => 'Top Bikini Halter',
-            'slug' => Str::slug('Top Bikini Halter'),
-            'description' => 'Top de bikini estilo halter en colores vibrantes.',
-            'price' => 55.00,
-            'stock' => 40,
-        ]);
-        $this->addImage($p3->id, 'https://images.unsplash.com/photo-1594212699903-ec8a3ecc5056?q=80&w=800');
-
-        $p4 = Product::create([
-            'category_id' => $bikini->id,
-            'subcategory_id' => $bottoms->id,
-            'name' => 'Bottom High Waist',
-            'slug' => Str::slug('Bottom High Waist'),
-            'description' => 'Calzón de bikini tiro alto.',
-            'price' => 49.90,
-            'stock' => 40,
-        ]);
-        $this->addImage($p4->id, 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=800');
-
-        // --- ROPA ---
-        $ropa = Category::where('name', 'Ropa')->first();
-        $vestidos = Subcategory::where('name', 'Vestidos')->first();
-        $shorts = Subcategory::where('name', 'Shorts')->first();
-
-        $p5 = Product::create([
-            'category_id' => $ropa->id,
-            'subcategory_id' => $vestidos->id,
-            'name' => 'Vestido Maxi Mariposa',
-            'slug' => Str::slug('Vestido Maxi Mariposa'),
-            'description' => 'Vestido largo y fresco para el verano.',
-            'price' => 120.00,
-            'stock' => 20,
-        ]);
-        $this->addImage($p5->id, 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=800');
-
-        $p6 = Product::create([
-            'category_id' => $ropa->id,
-            'subcategory_id' => $shorts->id,
-            'name' => 'Short Denim Beach',
-            'slug' => Str::slug('Short Denim Beach'),
-            'description' => 'Short de jean cómodo.',
-            'price' => 75.00,
-            'stock' => 35,
-        ]);
-        $this->addImage($p6->id, 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?q=80&w=800');
-
-        // --- ROPA DE BAÑO ---
-        $ropaDeBano = Category::where('name', 'Ropa De Baño')->first();
-        $enterizos = Subcategory::where('name', 'Enterizos')->first();
-        $triquinis = Subcategory::where('name', 'Triquinis')->first();
-
-        $p7 = Product::create([
-            'category_id' => $ropaDeBano->id,
-            'subcategory_id' => $enterizos->id,
-            'name' => 'Enterizo One-Piece Classic',
-            'slug' => Str::slug('Enterizo One-Piece Classic'),
-            'description' => 'Traje de baño enterizo elegante.',
-            'price' => 149.00,
-            'stock' => 15,
-        ]);
-        $this->addImage($p7->id, 'https://images.unsplash.com/photo-1502301197179-65217fd7ad6d?q=80&w=800');
-
-        $p8 = Product::create([
-            'category_id' => $ropaDeBano->id,
-            'subcategory_id' => $triquinis->id,
-            'name' => 'Triquini Exótico',
-            'slug' => Str::slug('Triquini Exótico'),
-            'description' => 'Triquini con cortes asimétricos.',
-            'price' => 135.00,
+            'category_id' => $polos->id,
+            'subcategory_id' => $babyAlpaca->id,
+            'name' => 'Polo Essence Antracita',
+            'slug' => Str::slug('Polo Essence Antracita'),
+            'description' => 'La versatilidad de la fibra de alpaca en un diseño minimalista. 100% Baby Alpaca.',
+            'price' => 189.00,
             'stock' => 25,
         ]);
-        $this->addImage($p8->id, 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?q=80&w=800');
+        $this->addImage($p3->id, 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=800');
+
+        $p4 = Product::create([
+            'category_id' => $polos->id,
+            'subcategory_id' => $cuelloAlto->id,
+            'name' => 'Sweater Alpaca Nordic Grey',
+            'slug' => Str::slug('Sweater Alpaca Nordic Grey'),
+            'description' => 'Tejido grueso con patrón tradicional revisado. Perfecto para el estilo contemporáneo.',
+            'price' => 245.00,
+            'stock' => 15,
+        ]);
+        $this->addImage($p4->id, 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?q=80&w=800');
+
+        // --- ACCESORIOS ---
+        $accesorios = Category::where('name', 'Accesorios')->first();
+        $bufandas = Subcategory::where('name', 'Bufandas')->first();
+        $chales = Subcategory::where('name', 'Chales')->first();
+
+        $p5 = Product::create([
+            'category_id' => $accesorios->id,
+            'subcategory_id' => $bufandas->id,
+            'name' => 'Bufanda Infinito Alpaca',
+            'slug' => Str::slug('Bufanda Infinito Alpaca'),
+            'description' => 'Tacto de seda, calidez de los Andes. 100% fibra natural hipoalergénica.',
+            'price' => 85.00,
+            'stock' => 50,
+        ]);
+        $this->addImage($p5->id, 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?q=80&w=800');
+
+        $p6 = Product::create([
+            'category_id' => $accesorios->id,
+            'subcategory_id' => $chales->id,
+            'name' => 'Chal Ceremonial Blanco',
+            'slug' => Str::slug('Chal Ceremonial Blanco'),
+            'description' => 'Elegancia pura en alpaca blanca. Ideal para eventos exclusivos.',
+            'price' => 125.00,
+            'stock' => 20,
+        ]);
+        $this->addImage($p6->id, 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=800');
+
+        // --- LUXURY ---
+        $luxury = Category::where('name', 'Colección Luxury')->first();
+        $handSpun = Subcategory::where('name', 'Hand-Spun Gold')->first();
+
+        $p7 = Product::create([
+            'category_id' => $luxury->id,
+            'subcategory_id' => $handSpun->id,
+            'name' => 'Capa Real de Vicuña & Alpaca',
+            'slug' => Str::slug('Capa Real De Vicuna Alpaca'),
+            'description' => 'La joya de la corona. Combinación de las fibras más finas del mundo en una pieza numerada.',
+            'price' => 1200.00,
+            'stock' => 2,
+        ]);
+        $this->addImage($p7->id, 'https://images.unsplash.com/photo-1544022613-e87dd75a784a?q=80&w=800');
     }
 
     private function addImage($productId, $url)

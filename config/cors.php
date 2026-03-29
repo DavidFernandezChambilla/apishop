@@ -20,7 +20,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://portal.sjj.com.pe',
+        'https://qaytuperu.com',
+        'https://www.qaytuperu.com',
         'http://localhost:4200',
         'http://localhost:8000',
     ],
